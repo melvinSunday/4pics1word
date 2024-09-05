@@ -7,6 +7,8 @@ const words = [
 let currentWord;
 let guessedWord;
 let shuffledLetters;
+let originalLetterPositions;
+let isMobileView = window.innerWidth < 768; // Assuming mobile breakpoint is 768px
 
 const imagesContainer = document.querySelector('#images-container');
 const wordContainer = document.querySelector('#word-container');
@@ -19,12 +21,12 @@ function initGame() {
     guessedWord = Array(currentWord.word.length).fill('');
     shuffledLetters = shuffleWord(currentWord.word);
 
-
     const extraLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     for (let i = 0; i < 3; i++) {
         shuffledLetters.push(extraLetters[Math.floor(Math.random() * extraLetters.length)]);
     }
     shuffledLetters = shuffleWord(shuffledLetters.join('')); 
+    originalLetterPositions = [...shuffledLetters];
 
     const images = imagesContainer.getElementsByTagName('img');
     for (let i = 0; i < 4; i++) {
@@ -35,30 +37,48 @@ function initGame() {
     for (let i = 0; i < currentWord.word.length; i++) {
         const letterSlot = document.createElement('div');
         letterSlot.classList.add('word-letter');
-        letterSlot.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.target.style.boxShadow = '0 0 5px rgba(0, 0, 0, 0.5)';
-        });
-        letterSlot.addEventListener('dragleave', (e) => {
-            e.target.style.boxShadow = 'none';
-        });
-        letterSlot.addEventListener('drop', (e) => {
-            e.target.style.boxShadow = 'none';
-            dropLetter(e, i);
-        });
+        if (!isMobileView) {
+            letterSlot.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.target.style.boxShadow = '0 0 5px rgba(0, 0, 0, 0.5)';
+            });
+            letterSlot.addEventListener('dragleave', (e) => {
+                e.target.style.boxShadow = 'none';
+            });
+            letterSlot.addEventListener('drop', (e) => {
+                e.target.style.boxShadow = 'none';
+                dropLetter(e, i);
+            });
+        }
         letterSlot.addEventListener('click', () => returnLetter(i));
         wordContainer.appendChild(letterSlot);
     }
 
-    lettersContainer.innerHTML = shuffledLetters
-        .map(letter => `
-            <div class="letter-btn" draggable="true" ondragstart="dragStart(event, '${letter}')" ondragend="dragEnd(event)">
-                ${letter}
-            </div>
-        `)
-        .join('');
+    updateLettersContainer();
 
     message.textContent = '';
+}
+
+function updateLettersContainer() {
+    const totalLetters = shuffledLetters.length;
+    const lettersPerRow = Math.ceil(totalLetters / 2);
+
+    const rows = [
+        shuffledLetters.slice(0, lettersPerRow),
+        shuffledLetters.slice(lettersPerRow)
+    ];
+
+    lettersContainer.innerHTML = rows.map(row => 
+        `<div class="letter-row">
+            ${row.map(letter => {
+                if (isMobileView) {
+                    return `<div class="letter-btn" onclick="clickLetter('${letter}')">${letter}</div>`;
+                } else {
+                    return `<div class="letter-btn" draggable="true" ondragstart="dragStart(event, '${letter}')" ondragend="dragEnd(event)">${letter}</div>`;
+                }
+            }).join('')}
+        </div>`
+    ).join('');
 }
 
 function shuffleWord(word) {
@@ -89,6 +109,15 @@ function dropLetter(e, index) {
     }
 }
 
+function clickLetter(letter) {
+    const emptyIndex = guessedWord.findIndex(l => l === '');
+    if (emptyIndex !== -1) {
+        guessedWord[emptyIndex] = letter;
+        updateWordDisplay();
+        removeLetter(letter);
+    }
+}
+
 function updateWordDisplay() {
     const letterSlots = wordContainer.getElementsByClassName('word-letter');
     for (let i = 0; i < guessedWord.length; i++) {
@@ -97,12 +126,10 @@ function updateWordDisplay() {
 }
 
 function removeLetter(letter) {
-    const letterButtons = lettersContainer.getElementsByClassName('letter-btn');
-    for (let btn of letterButtons) {
-        if (btn.textContent.trim() === letter) {
-            btn.remove();
-            break;
-        }
+    const index = shuffledLetters.indexOf(letter);
+    if (index > -1) {
+        shuffledLetters.splice(index, 1);
+        updateLettersContainer();
     }
 }
 
@@ -116,13 +143,13 @@ const returnLetter = (index) => {
 }
 
 const addLetter = (letter) => {
-    const newLetterBtn = document.createElement('div');
-    newLetterBtn.classList.add('letter-btn');
-    newLetterBtn.draggable = true;
-    newLetterBtn.textContent = letter;
-    newLetterBtn.addEventListener('dragstart', (e) => dragStart(e, letter));
-    newLetterBtn.addEventListener('dragend', dragEnd);
-    lettersContainer.appendChild(newLetterBtn);
+    const originalIndex = originalLetterPositions.indexOf(letter);
+    if (originalIndex !== -1) {
+        shuffledLetters.splice(originalIndex, 0, letter);
+    } else {
+        shuffledLetters.push(letter);
+    }
+    updateLettersContainer();
 }
 
 const checkWord = () =>{
@@ -140,15 +167,18 @@ const checkWord = () =>{
 }
 
 const resetLetters = () => {
-    lettersContainer.innerHTML = shuffledLetters
-        .map(letter => `
-            <div class="letter-btn" draggable="true" ondragstart="dragStart(event, '${letter}')" ondragend="dragEnd(event)">
-                ${letter}
-            </div>
-        `)
-        .join('');
+    shuffledLetters = [...originalLetterPositions];
+    updateLettersContainer();
 }
 
 submitBtn.addEventListener('click', checkWord);
+
+window.addEventListener('resize', () => {
+    const newIsMobileView = window.innerWidth < 768;
+    if (newIsMobileView !== isMobileView) {
+        isMobileView = newIsMobileView;
+        updateLettersContainer();
+    }
+});
 
 initGame();

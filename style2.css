@@ -20,22 +20,16 @@ body {
     display: flex;
     justify-content: center;
     flex-direction: column;
-
     margin-right: 10px;
     align-items: center;
     margin-bottom: 20px;
 }
 
-#images-container .box1 {
+#images-container .box1, #images-container .box2 {
     display: flex;
     gap: 15px;
     margin-bottom: 15px;
-
-}
-#images-container .box2 {
-display: flex;
-gap: 15px;
-
+    flex-wrap: wrap;
 }
 
 img {
@@ -43,7 +37,6 @@ img {
     height: 200px !important;
     object-fit: cover;
     border-radius: 5px;
-
 }
 
 .game-image {
@@ -69,16 +62,19 @@ img {
     align-items: center;
     font-size: 20px;
     font-weight: bold;
-;
+}
+#letters-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-#letters-container {
-    display: grid;
-    grid-template-columns: repeat(13, auto);
-    grid-template-rows: repeat(2, auto);
-    gap: 5px;
+.letter-row {
+    display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    gap: 5px;
 }
 
 .letter-btn {
@@ -119,3 +115,69 @@ img {
     transition: all 0.3s ease;
 }
 
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #game-container {
+        padding: 15px;
+    }
+
+    #images-container {
+        flex-direction: column;
+    }
+
+    img {
+        width: 150px !important;
+        height: 150px !important;
+    }
+
+    .game-image {
+        width: 120px;
+        height: 120px;
+    }
+
+    #letters-container {
+        grid-template-columns: repeat(6, auto);
+        grid-template-rows: repeat(3, auto);
+    }
+
+    .letter-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+
+    #submit-btn {
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+
+    #message {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    img, .game-image {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .letter-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    #word-container {
+        margin-bottom: 15px;
+    }
+
+    #submit-btn {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+
+    #message {
+        font-size: 0.9rem;
+    }
+}
